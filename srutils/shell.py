@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
 
 logger = logging.getLogger("srutils")
 
@@ -42,7 +43,7 @@ def shell_popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE):
     return proc
 
 
-def shell_get_stdout_retcode(cmd):
+def shell_get_stdout_retcode(cmd, display_output=False):
     """
     Execute a shell command and return its output and return code for short running commands.
     """
@@ -62,4 +63,33 @@ def shell_get_stdout_retcode(cmd):
         proc.wait()
         temp_file.seek(0)
         output = temp_file.read()
+        if display_output:
+            print(output)
     return output, proc.returncode
+
+
+def shell_check_output_kill(cmd, target_text, terminate_func=None, time_before_kill=1):
+    # might be in an infinite loop, if a wrong target_text is given
+    cmd = _cmd(cmd)
+    logger.debug(f"shell_check_output_kill: {cmd}")
+    proc = subprocess.Popen(
+        cmd,
+        cwd=os.getcwd(),
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        stdin=subprocess.PIPE,
+        universal_newlines=True,
+        env=os.environ,
+    )
+    while True:
+        line = proc.stdout.readline()
+        print(line, end='')
+        if target_text in line:
+            time.sleep(time_before_kill)
+            if terminate_func:
+                terminate_func()
+            else:
+                proc.terminate()
+            break
+    proc.wait()
