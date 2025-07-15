@@ -64,10 +64,11 @@ def shell_get_stdout_retcode(cmd, display_output=False):
         proc.wait()
         temp_file.seek(0)
         output = temp_file.read()
+        output_str = output.decode(encoding="utf-8", errors="ignore")
         if display_output:
-            print(output.decode(encoding="utf-8", errors="ignore"), end='')
+            print(output_str, end='')
 
-    return output, proc.returncode
+    return output_str, proc.returncode
 
 
 def shell_check_output_kill(cmd, target_text, terminate_func=None, time_before_kill=1):
