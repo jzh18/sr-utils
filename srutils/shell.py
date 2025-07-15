@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -20,7 +21,7 @@ def _cmd(cmd):
 def shell_system(cmd):
     cmd = _cmd(cmd)
     logger.debug(f"shell_system: {cmd}")
-    os.system(cmd)
+    return os.WEXITSTATUS(os.system(cmd))
 
 
 def shell_popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE):
@@ -49,7 +50,7 @@ def shell_get_stdout_retcode(cmd, display_output=False):
     """
     cmd = _cmd(cmd)
     logger.debug(f"shell_get_output: {cmd}")
-    with tempfile.TemporaryFile(mode='w+') as temp_file:
+    with tempfile.TemporaryFile() as temp_file:
         proc = subprocess.Popen(
             cmd,
             cwd=os.getcwd(),
@@ -64,7 +65,8 @@ def shell_get_stdout_retcode(cmd, display_output=False):
         temp_file.seek(0)
         output = temp_file.read()
         if display_output:
-            print(output)
+            print(output.decode(encoding="utf-8", errors="ignore"), end='')
+
     return output, proc.returncode
 
 
